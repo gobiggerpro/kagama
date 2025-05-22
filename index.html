@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Program Pemberdayaan Masyarakat KAGAMA Batang</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Application Structure Plan: 
+        SPA ini menggunakan bilah navigasi utama untuk beralih antara tiga bagian utama, satu untuk setiap program KAGAMA Batang: "Pelatihan Pilah Sampah," "Pelatihan Literasi Digital," dan "Kelas Inspirasi."
+        Setiap bagian program akan dengan jelas menampilkan "Tujuan," "Rencana Implementasi" (dipecah menjadi "Target Peserta" dan "Tahapan"), dan "Keberlanjutan" menggunakan kartu dan teks terstruktur.
+        "Tahapan" akan disajikan sebagai daftar dengan ikon.
+        Sub-bagian tambahan "Metrik Dampak Program" akan disertakan untuk setiap program, menampilkan diagram batang Chart.js sederhana dengan data tiruan untuk menunjukkan kemampuan visualisasi data, seperti jumlah peserta atau kepuasan.
+        Struktur ini dipilih untuk kejelasan, memungkinkan pengguna menavigasi dan mencerna informasi dengan mudah untuk setiap program spesifik. Tab/bagian interaktif memfasilitasi eksplorasi terfokus.
+    -->
+    <!-- Visualization & Content Choices: 
+        - Detail Program (Tujuan, Rencana, Keberlanjutan): Tujuan: Informasikan/Organisir -> Presentasi: HTML Terstruktur (judul, daftar, paragraf dalam kartu) menggunakan Tailwind CSS. Interaksi: Navigasi antar bagian program. Justifikasi: Informasi tekstual yang jelas paling baik disajikan secara langsung. Metode: HTML/CSS. TIDAK ADA SVG/Mermaid.
+        - Tahapan (Fase): Tujuan: Organisir -> Presentasi: Daftar bergaya dengan ikon Unicode (misalnya, ♻️ untuk sampah, 💻 untuk digital, ✨ untuk inspirasi) untuk isyarat visual. Metode: HTML/CSS dengan Tailwind. TIDAK ADA SVG/Mermaid.
+        - Metrik Dampak Program Tiruan (misalnya, Peserta per Program): Tujuan: Bandingkan/Informasikan -> Visualisasi: Diagram Batang Vertikal. Interaksi: Tooltip saat hover. Justifikasi: Untuk menunjukkan kemampuan Chart.js sesuai permintaan persona, menampilkan metrik keterlibatan atau keberhasilan hipotetis. Pustaka: Chart.js (Canvas). TIDAK ADA SVG/Mermaid.
+        - Navigasi: Tombol/Tab untuk mengganti tampilan program. JS untuk menangani perubahan tampilan.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F5F2; 
+            color: #4A4039; 
+        }
+        .nav-active {
+            background-color: #8D6E63; 
+            color: #FFFFFF;
+        }
+        .nav-inactive {
+            background-color: #D7CCC8; 
+            color: #4A4039;
+        }
+        .nav-inactive:hover {
+            background-color: #BCAAA4; 
+        }
+        .card {
+            background-color: #FFFFFF; 
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+        }
+        .card-title {
+            font-size: 1.5rem; 
+            font-weight: 600;
+            color: #8D6E63; 
+            margin-bottom: 1rem;
+        }
+        .sub-card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #4A4039; 
+            margin-top: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .tahapan-list li {
+            background-color: #F8F5F2; 
+            margin-bottom: 0.5rem;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            border-left: 4px solid #8D6E63; 
+        }
+        .tahapan-list strong {
+            color: #8D6E63; 
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; 
+            height: 320px; 
+            margin-left: auto;
+            margin-right: auto;
+            padding: 1rem; 
+        }
+        @media (min-width: 768px) { 
+            .chart-container {
+                height: 400px; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-[#8D6E63] text-white py-8 shadow-lg">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-4xl font-bold">Program Pemberdayaan Masyarakat</h1>
+            <p class="text-xl mt-2">KAGAMA Cabang Batang</p>
+        </div>
+    </header>
+
+    <nav class="bg-[#D7CCC8] py-3 sticky top-0 z-50 shadow-md">
+        <div class="container mx-auto flex justify-center space-x-2 sm:space-x-4">
+            <button id="navPilahSampah" class="nav-button nav-active px-4 py-2 rounded-md font-semibold transition-colors duration-300 text-sm sm:text-base">♻️ Pilah Sampah</button>
+            <button id="navLiterasiDigital" class="nav-button nav-inactive px-4 py-2 rounded-md font-semibold transition-colors duration-300 text-sm sm:text-base">💻 Literasi Digital</button>
+            <button id="navKelasInspirasi" class="nav-button nav-inactive px-4 py-2 rounded-md font-semibold transition-colors duration-300 text-sm sm:text-base">✨ Kelas Inspirasi</button>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <section id="pilahSampahSection" class="program-section">
+            <div class="card">
+                <h2 class="card-title">Pelatihan Pilah Sampah</h2>
+                <p class="mb-4 text-lg">Program ini bertujuan untuk membekali masyarakat dengan pengetahuan dan keterampilan yang diperlukan untuk mengelola sampah secara efektif mulai dari sumbernya, sehingga dapat mengurangi dampak negatif terhadap lingkungan dan sekaligus membuka peluang ekonomi melalui daur ulang.</p>
+                
+                <div class="sub-card-title">🎯 Tujuan Program</div>
+                <p>Meningkatkan kesadaran dan keterampilan masyarakat dalam mengelola sampah dari sumbernya, mengurangi dampak lingkungan, serta membuka potensi ekonomi dari daur ulang.</p>
+
+                <div class="sub-card-title">👥 Target Peserta</div>
+                <p>Warga desa/kelurahan, kader PKK, dan karang taruna.</p>
+
+                <div class="sub-card-title">🗺️ Rencana Implementasi: Tahapan</div>
+                <ul class="tahapan-list space-y-2 mt-2">
+                    <li><strong>Fase 1: Sosialisasi</strong><br>Kolaborasi dengan pemerintah desa dan sekolah, menggandeng Dinas Lingkungan Hidup untuk penyuluhan.</li>
+                    <li><strong>Fase 2: Pelatihan Praktis</strong><br>Pelatihan langsung cara memilah organik, anorganik, dan B3. Disertai simulasi dan penggunaan alat sederhana (komposter, bank sampah mini).</li>
+                    <li><strong>Fase 3: Aksi Nyata</strong><br>Mendorong pembentukan bank sampah lokal di RT/RW atau sekolah. Alumni UGM bisa menjadi mentor atau fasilitator.</li>
+                    <li><strong>Fase 4: Monitoring dan Evaluasi</strong><br>Pelaporan berkala progres tiap wilayah, dibantu oleh relawan KAGAMA atau mahasiswa KKN.</li>
+                </ul>
+
+                <div class="sub-card-title">🌱 Keberlanjutan</div>
+                <ul class="list-disc list-inside pl-4 space-y-1">
+                    <li>Bekerjasama dengan bank sampah induk untuk pembelian hasil pilahan.</li>
+                    <li>Adakan lomba RT/Desa Bersih tiap tahun dengan hadiah dari sponsor lokal.</li>
+                    <li>Program ini bisa diintegrasikan dengan kegiatan CSR perusahaan di Batang.</li>
+                </ul>
+
+                <div class="sub-card-title">📊 Metrik Dampak Program (Contoh)</div>
+                <p class="text-sm mb-2">Visualisasi berikut menunjukkan contoh data partisipasi dan hasil dari program pelatihan pilah sampah.</p>
+                <div class="chart-container">
+                    <canvas id="pilahSampahChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="literasiDigitalSection" class="program-section hidden">
+            <div class="card">
+                <h2 class="card-title">Pelatihan Literasi Digital untuk Marketing</h2>
+                <p class="mb-4 text-lg">Program ini dirancang untuk memberdayakan para pelaku UMKM, petani milenial, dan pengusaha lokal lainnya agar memiliki kemampuan memasarkan produk mereka secara digital, sehingga dapat menjangkau pasar yang lebih luas dan meningkatkan daya saing.</p>
+
+                <div class="sub-card-title">🎯 Tujuan Program</div>
+                <p>Memberdayakan UMKM, petani milenial, dan pelaku usaha lokal agar mampu memasarkan produk secara digital dan memperluas pasar.</p>
+
+                <div class="sub-card-title">👥 Target Peserta</div>
+                <p>UMKM lokal, petani milenial, ibu rumah tangga pelaku usaha kecil.</p>
+
+                <div class="sub-card-title">🗺️ Rencana Implementasi: Tahapan</div>
+                <ul class="tahapan-list space-y-2 mt-2">
+                    <li><strong>Fase 1: Pemetaan dan Seleksi</strong><br>Pendataan pelaku usaha lokal. Prioritaskan yang sudah punya produk tapi belum digital.</li>
+                    <li><strong>Fase 2: Pelatihan Dasar</strong><br>Materi: Pembuatan akun media sosial bisnis, foto produk pakai HP, penulisan caption, cara jualan di marketplace (Shopee, Tokopedia, dll).</li>
+                    <li><strong>Fase 3: Pendampingan</strong><br>Setiap peserta didampingi mentor alumni UGM atau mahasiswa magang. Fokus pada praktik langsung.</li>
+                    <li><strong>Fase 4: Showcase Produk Online</strong><br>Buat akun Instagram/toko bersama sebagai galeri produk lokal. Disambungkan dengan e-katalog Batang atau komunitas diaspora KAGAMA.</li>
+                </ul>
+
+                <div class="sub-card-title">🌱 Keberlanjutan</div>
+                <ul class="list-disc list-inside pl-4 space-y-1">
+                    <li>Adakan “Kelas Update” setiap 6 bulan untuk penyesuaian tren.</li>
+                    <li>Gandeng relawan digital marketing KAGAMA dan Dinas Koperasi/UMKM.</li>
+                    <li>Kerja sama dengan marketplace atau platform seperti Rumah BUMN.</li>
+                </ul>
+                <div class="sub-card-title">📊 Metrik Dampak Program (Contoh)</div>
+                <p class="text-sm mb-2">Visualisasi berikut menunjukkan contoh data peningkatan jangkauan pasar UMKM setelah mengikuti program.</p>
+                 <div class="chart-container">
+                    <canvas id="literasiDigitalChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="kelasInspirasiSection" class="program-section hidden">
+            <div class="card">
+                <h2 class="card-title">Kelas Inspirasi/Motivasi dari Alumni UGM</h2>
+                <p class="mb-4 text-lg">Melalui berbagi pengalaman dari alumni UGM yang telah berkiprah di berbagai bidang profesi dan sebagai praktisi, program ini bertujuan untuk menumbuhkan motivasi, memperluas aspirasi, dan membangkitkan semangat anak-anak muda di Batang.</p>
+
+                <div class="sub-card-title">🎯 Tujuan Program</div>
+                <p>Menumbuhkan motivasi, aspirasi, dan semangat anak-anak muda di Batang melalui sharing pengalaman dari alumni UGM lintas profesi dan praktisi.</p>
+
+                <div class="sub-card-title">👥 Target Peserta</div>
+                <p>Siswa SMA/SMK, mahasiswa lokal, karang taruna, masyarakat umum.</p>
+
+                <div class="sub-card-title">🗺️ Rencana Implementasi: Tahapan</div>
+                <ul class="tahapan-list space-y-2 mt-2">
+                    <li><strong>Fase 1: Roadshow Sekolah</strong><br>Alumni UGM datang ke sekolah-sekolah (secara luring atau daring) membagikan kisah perjuangan kuliah, karir, dan kontribusi sosial.</li>
+                    <li><strong>Fase 2: Kelas Berkala</strong><br>Diadakan per 3 bulan. Setiap sesi bisa ambil tema berbeda: pendidikan, wirausaha, pertanian, teknologi, seni, dll.</li>
+                    <li><strong>Fase 3: Program Mentoring</strong><br>Siswa/i berprestasi atau berminat bisa mendapat mentor alumni untuk bimbingan karir/pilihan studi.</li>
+                    <li><strong>Fase 4: Showcase</strong><br>Buat event tahunan (Festival Inspirasi Batang) yang menampilkan alumni sukses, pameran hasil karya siswa, talkshow, dan beasiswa KAGAMA.</li>
+                </ul>
+
+                <div class="sub-card-title">🌱 Keberlanjutan</div>
+                <ul class="list-disc list-inside pl-4 space-y-1">
+                    <li>Sistem rotasi alumni narasumber maupun praktisi.</li>
+                    <li>Kolaborasi dengan komunitas pendidikan lokal dan Dinas Pendidikan Batang.</li>
+                    <li>Buat arsip video inspirasi untuk platform YouTube KAGAMA Batang.</li>
+                </ul>
+                <div class="sub-card-title">📊 Metrik Dampak Program (Contoh)</div>
+                <p class="text-sm mb-2">Visualisasi berikut menunjukkan contoh data tingkat motivasi peserta sebelum dan sesudah mengikuti kelas inspirasi.</p>
+                <div class="chart-container">
+                    <canvas id="kelasInspirasiChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-[#D7CCC8] text-[#4A4039] text-center py-6 mt-8">
+        <p>&copy; 2024 KAGAMA Cabang Batang. Hak Cipta Dilindungi.</p>
+    </footer>
+
+    <script>
+        const navButtons = document.querySelectorAll('.nav-button');
+        const programSections = document.querySelectorAll('.program-section');
+
+        const chartColors = ['#8D6E63', '#A1887F', '#BCAAA4', '#D7CCC8'];
+        const textColor = '#4A4039';
+        const gridColor = 'rgba(74, 64, 57, 0.1)';
+
+        const commonChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: { color: textColor }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 10,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y;
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { 
+                    ticks: { color: textColor, font: {size: 11} }, 
+                    grid: { color: gridColor, drawOnChartArea: false } 
+                },
+                y: { 
+                    ticks: { color: textColor, font: {size: 11} }, 
+                    grid: { color: gridColor }, 
+                    beginAtZero: true 
+                }
+            }
+        };
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const programNamePart = button.id.replace('nav', ''); 
+                const targetSectionId = programNamePart.charAt(0).toLowerCase() + programNamePart.slice(1) + 'Section';
+                
+                programSections.forEach(section => {
+                    if (section.id === targetSectionId) {
+                        section.classList.remove('hidden');
+                    } else {
+                        section.classList.add('hidden');
+                    }
+                });
+
+                navButtons.forEach(btn => {
+                    btn.classList.remove('nav-active');
+                    btn.classList.add('nav-inactive');
+                });
+                button.classList.add('nav-active');
+                button.classList.remove('nav-inactive');
+            });
+        });
+
+        const pilahSampahCtx = document.getElementById('pilahSampahChart').getContext('2d');
+        new Chart(pilahSampahCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Batch 1', 'Batch 2', 'Batch 3', 'Batch 4'],
+                datasets: [{
+                    label: 'Jumlah Peserta Terlatih',
+                    data: [45, 62, 55, 70],
+                    backgroundColor: chartColors[0],
+                    borderColor: chartColors[0],
+                    borderWidth: 1
+                },
+                {
+                    label: 'Sampah Terdaur Ulang (kg)',
+                    data: [150, 210, 180, 250],
+                    backgroundColor: chartColors[1],
+                    borderColor: chartColors[1],
+                    borderWidth: 1
+                }]
+            },
+            options: {...commonChartOptions, plugins: {...commonChartOptions.plugins, title: {display: true, text: 'Partisipasi & Hasil Pelatihan Pilah Sampah', color: textColor, font: {size: 14}}}}
+        });
+
+        const literasiDigitalCtx = document.getElementById('literasiDigitalChart').getContext('2d');
+        new Chart(literasiDigitalCtx, {
+            type: 'line',
+            data: {
+                labels: ['Q1', 'Q2', 'Q3', 'Q4 (Proyeksi)'],
+                datasets: [{
+                    label: 'Rata-rata Peningkatan Penjualan UMKM (%)',
+                    data: [5, 12, 18, 25],
+                    borderColor: chartColors[0],
+                    backgroundColor: 'rgba(141, 110, 99, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                },
+                {
+                    label: 'Jangkauan Pasar Baru (Pelanggan)',
+                    data: [50, 150, 300, 500],
+                    borderColor: chartColors[2],
+                    backgroundColor: 'rgba(188, 170, 164, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {...commonChartOptions, plugins: {...commonChartOptions.plugins, title: {display: true, text: 'Dampak Pelatihan Literasi Digital pada UMKM', color: textColor, font: {size: 14}}}}
+        });
+
+        const kelasInspirasiCtx = document.getElementById('kelasInspirasiChart').getContext('2d');
+        new Chart(kelasInspirasiCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Motivasi Belajar', 'Aspirasi Karir', 'Kepercayaan Diri', 'Keterampilan Komunikasi', 'Jaringan Pertemanan'],
+                datasets: [{
+                    label: 'Sebelum Program (Skala 1-10)',
+                    data: [6, 5, 5, 4, 6],
+                    fill: true,
+                    backgroundColor: 'rgba(188, 170, 164, 0.2)', 
+                    borderColor: chartColors[2],
+                    pointBackgroundColor: chartColors[2],
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: chartColors[2]
+                }, {
+                    label: 'Setelah Program (Skala 1-10)',
+                    data: [8, 9, 8, 7, 9],
+                    fill: true,
+                    backgroundColor: 'rgba(141, 110, 99, 0.2)', 
+                    borderColor: chartColors[0],
+                    pointBackgroundColor: chartColors[0],
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: chartColors[0]
+                }]
+            },
+            options: {...commonChartOptions, plugins: {...commonChartOptions.plugins, title: {display: true, text: 'Peningkatan Aspek Diri Peserta Kelas Inspirasi', color: textColor, font: {size: 14}}}, scales: {r: {angleLines: {color: gridColor}, grid: {color: gridColor}, pointLabels: {font: {size:11, color:textColor}}, ticks: {backdropColor: 'transparent', color:textColor, stepSize:2}}}}
+        });
+        
+        if(document.getElementById('navPilahSampah')) {
+          document.getElementById('navPilahSampah').click();
+        }
+    </script>
+</body>
+</html>
